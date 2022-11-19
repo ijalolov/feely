@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db.models import Avg
 from rest_framework import serializers
+
+from users.models import User
 from .models import *
 
 
@@ -24,12 +26,29 @@ class SpecializationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProfileShortSerializer(serializers.ModelSerializer):
+    pic = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'username', 'full_name', 'pic', 'email', 'about'
+        )
+
+    def get_pic(self, obj):
+        try:
+            return settings.HOST + obj.pic.url
+        except Exception as e:
+            print(e)
+            return None
+
 class DoctorSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     specializations = SpecializationSerializer(many=True)
     avg_rating = serializers.SerializerMethodField()
     total_rating = serializers.SerializerMethodField()
     user_rating = serializers.SerializerMethodField()
+    user = ProfileShortSerializer()
 
     class Meta:
         model = Doctor
